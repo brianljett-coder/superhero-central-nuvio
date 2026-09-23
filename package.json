@@ -1,13 +1,13 @@
 {
   "name": "superhero-central-nuvio",
   "version": "1.0.0",
-  "private": true,
-  "description": "Superhero-only Nuvio/Stremio catalog addon",
+  "description": "Superhero Central addon for Nuvio/Stremio",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-"dependencies": {
-  "express": "^4.18.2",
-  "cors": "^2.8.5"
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
 }
