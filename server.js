@@ -24,80 +24,80 @@ const MANIFEST = {
       type: "movie",
       id: "superhero_movies",
       name: "Superhero Movies",
-      extra: [{ name: "search", isRequired: false }],
+      extra: [{ name: "search", isRequired: false }]
     },
     {
       type: "series",
       id: "superhero_series",
       name: "Superhero Series",
-      extra: [{ name: "search", isRequired: false }],
+      extra: [{ name: "search", isRequired: false }]
     },
     {
       type: "movie",
       id: "marvel_movies",
-      name: "Marvel Movies",
+      name: "Marvel Movies"
     },
     {
       type: "series",
       id: "marvel_series",
-      name: "Marvel Series",
+      name: "Marvel Series"
     },
     {
       type: "movie",
       id: "dc_movies",
-      name: "DC Movies",
+      name: "DC Movies"
     },
     {
       type: "series",
       id: "dc_series",
-      name: "DC Series",
+      name: "DC Series"
     },
     {
       type: "movie",
       id: "animated_movies",
-      name: "Animated Superheroes",
+      name: "Animated Superheroes"
     },
     {
       type: "series",
       id: "animated_series",
-      name: "Animated Superhero Series",
+      name: "Animated Superhero Series"
     },
     {
       type: "movie",
       id: "classic_movies",
-      name: "Classic Superheroes",
+      name: "Classic Superheroes"
     },
     {
       type: "movie",
       id: "other_comic_movies",
-      name: "Other Comic Heroes",
-    },
+      name: "Other Comic Heroes"
+    }
   ],
   behaviorHints: {
     adult: false,
     p2p: false,
-    configurable: true,
+    configurable: true
   },
   config: [
     {
       key: "tmdb_api_key",
       type: "password",
       title: "TMDB API Key",
-      required: true,
+      required: true
     },
     {
       key: "language",
       type: "text",
       title: "Language",
-      default: "en-US",
+      default: "en-US"
     },
     {
       key: "region",
       type: "text",
       title: "Region",
-      default: "US",
-    },
-  ],
+      default: "US"
+    }
+  ]
 };
 
 function dedupe(items) {
@@ -107,20 +107,6 @@ function dedupe(items) {
     if (!item || !item.id) return false;
 
     const key = `${item.id}`;
-    if (seen.has(key)) return false;
-
-    seen.add(key);
-    return true;
-  });
-}
-
-function dedupeRaw(items) {
-  const seen = new Set();
-
-  return items.filter((item) => {
-    if (!item || !item.id) return false;
-
-    const key = `${item.media_type || ""}-${item.id}`;
 
     if (seen.has(key)) return false;
 
@@ -139,7 +125,11 @@ async function tmdb(path, params = {}) {
   url.searchParams.set("api_key", TMDB_API_KEY);
 
   for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined && value !== null && value !== "") {
+    if (
+      value !== undefined &&
+      value !== null &&
+      value !== ""
+    ) {
       url.searchParams.set(key, value);
     }
   }
@@ -153,13 +143,17 @@ async function tmdb(path, params = {}) {
   return response.json();
 }
 
-async function discoverPages(mediaType, params = {}, pages = MAX_PAGES) {
+async function discoverPages(
+  mediaType,
+  params = {},
+  pages = MAX_PAGES
+) {
   const all = [];
 
   for (let page = 1; page <= pages; page++) {
     const data = await tmdb(`/discover/${mediaType}`, {
       ...params,
-      page,
+      page
     });
 
     all.push(...(data.results || []));
@@ -172,13 +166,18 @@ async function discoverPages(mediaType, params = {}, pages = MAX_PAGES) {
   return all;
 }
 
-async function searchPages(mediaType, query, pages = MAX_PAGES) {
+async function searchPages(
+  mediaType,
+  query,
+  pages = 3
+) {
   const all = [];
 
   for (let page = 1; page <= pages; page++) {
     const data = await tmdb(`/search/${mediaType}`, {
       query,
       page,
+      include_adult: false
     });
 
     all.push(...(data.results || []));
@@ -191,11 +190,31 @@ async function searchPages(mediaType, query, pages = MAX_PAGES) {
   return all;
 }
 
+async function searchMany(
+  mediaType,
+  queries,
+  pages = 2
+) {
+  const all = [];
+
+  for (const query of queries) {
+    const results = await searchPages(
+      mediaType,
+      query,
+      pages
+    );
+
+    all.push(...results);
+  }
+
+  return dedupe(all);
+}
+
 async function superheroDiscover(mediaType) {
   return discoverPages(mediaType, {
     with_keywords: "9715",
     sort_by: "popularity.desc",
-    include_adult: false,
+    include_adult: false
   });
 }
 
@@ -203,41 +222,100 @@ async function marvelDiscover(mediaType) {
   const companyResults = await discoverPages(mediaType, {
     with_companies: "420",
     sort_by: "popularity.desc",
-    include_adult: false,
+    include_adult: false
   });
 
-  const superheroResults = await superheroDiscover(mediaType);
+  const superheroResults =
+    await superheroDiscover(mediaType);
 
-  return dedupe([...companyResults, ...superheroResults]);
+  return dedupe([
+    ...companyResults,
+    ...superheroResults
+  ]);
 }
 
 async function dcDiscover(mediaType) {
   const companyResults = await discoverPages(mediaType, {
     with_companies: "9993",
     sort_by: "popularity.desc",
-    include_adult: false,
+    include_adult: false
   });
 
-  const superheroResults = await superheroDiscover(mediaType);
+  const superheroResults =
+    await superheroDiscover(mediaType);
 
-  return dedupe([...companyResults, ...superheroResults]);
+  return dedupe([
+    ...companyResults,
+    ...superheroResults
+  ]);
 }
 
+/*
+ * EXPANDED ANIMATED SUPERHEROES
+ *
+ * TMDB's superhero keyword alone can miss legitimate
+ * animated Batman, Superman, Justice League and Marvel
+ * animated films. We therefore combine the normal
+ * superhero/animation discovery with targeted searches.
+ */
 async function animatedDiscover(mediaType) {
-  return discoverPages(mediaType, {
+  const baseResults = await discoverPages(mediaType, {
     with_keywords: "9715",
     with_genres: "16",
     sort_by: "popularity.desc",
-    include_adult: false,
+    include_adult: false
   });
+
+  const animatedHeroQueries = [
+    "Batman animated",
+    "Superman animated",
+    "Justice League animated",
+    "Justice League Dark animated",
+    "Teen Titans animated",
+    "Teenage Mutant Ninja Turtles animated",
+    "Green Lantern animated",
+    "Wonder Woman animated",
+    "Flash animated",
+    "Aquaman animated",
+    "Suicide Squad animated",
+    "Marvel animated",
+    "Avengers animated",
+    "Spider-Man animated",
+    "Spider-Man animated movie",
+    "Iron Man animated",
+    "Hulk animated",
+    "Thor animated",
+    "Wolverine animated",
+    "X-Men animated",
+    "Fantastic Four animated",
+    "Captain America animated",
+    "Batman animated movie",
+    "Superman animated movie"
+  ];
+
+  const searchedResults = await searchMany(
+    mediaType,
+    animatedHeroQueries,
+    2
+  );
+
+  const animatedOnly = [
+    ...baseResults,
+    ...searchedResults
+  ].filter((item) => {
+    return Array.isArray(item.genre_ids) &&
+      item.genre_ids.includes(16);
+  });
+
+  return dedupe(animatedOnly);
 }
 
 /*
  * CLASSIC SUPERHEROES
  *
- * Instead of simply taking the superhero keyword results and
- * filtering them to pre-2000, we search several older superhero
- * and comic-book terms and combine the results.
+ * This is the successful expanded version.
+ * It deliberately searches older superhero properties
+ * instead of relying only on TMDB's superhero keyword.
  */
 async function classicDiscover() {
   const queries = [
@@ -260,18 +338,23 @@ async function classicDiscover() {
     "Spider-Man",
     "X-Men",
     "Punisher",
-    "Hellboy",
+    "Hellboy"
   ];
 
   const all = [];
 
   for (const query of queries) {
-    const results = await searchPages("movie", query, 2);
+    const results = await searchPages(
+      "movie",
+      query,
+      2
+    );
 
     for (const movie of results) {
       if (!movie.release_date) continue;
 
-      const year = Number(movie.release_date.slice(0, 4));
+      const year =
+        Number(movie.release_date.slice(0, 4));
 
       if (year > 0 && year < 2000) {
         all.push(movie);
@@ -279,17 +362,14 @@ async function classicDiscover() {
     }
   }
 
-  /*
-   * Also include TMDB's superhero keyword results from the
-   * older era. This catches classic titles that aren't found
-   * through the title searches above.
-   */
-  const superheroResults = await superheroDiscover("movie");
+  const superheroResults =
+    await superheroDiscover("movie");
 
   for (const movie of superheroResults) {
     if (!movie.release_date) continue;
 
-    const year = Number(movie.release_date.slice(0, 4));
+    const year =
+      Number(movie.release_date.slice(0, 4));
 
     if (year > 0 && year < 2000) {
       all.push(movie);
@@ -299,30 +379,67 @@ async function classicDiscover() {
   return dedupe(all);
 }
 
+/*
+ * OTHER COMIC HEROES
+ *
+ * Instead of looking for words such as "comic" or "hero"
+ * inside a movie title, search for actual comic-book
+ * properties and characters.
+ */
 async function otherComicDiscover() {
-  const superheroResults = await superheroDiscover("movie");
-
-  const comicTerms = [
-    "comic",
-    "hero",
-    "superhero",
-    "vigilante",
-    "masked",
-    "comic book",
-    "graphic novel",
-    "dark horse",
-    "image comics",
-    "vertigo",
+  const comicQueries = [
+    "Hellboy",
+    "Spawn",
+    "The Crow",
+    "The Shadow",
+    "The Phantom",
+    "The Rocketeer",
+    "Dick Tracy",
+    "Judge Dredd",
+    "Sin City",
+    "Watchmen",
+    "V for Vendetta",
+    "Kick-Ass",
+    "Kick Ass",
+    "Scott Pilgrim",
+    "Kingsman",
+    "Wanted",
+    "Red",
+    "RED 2",
+    "The Mask",
+    "Men in Black",
+    "30 Days of Night",
+    "Constantine",
+    "Dredd",
+    "Bloodshot",
+    "Valiant",
+    "Darkman",
+    "Mystery Men",
+    "The Spirit",
+    "League of Extraordinary Gentlemen",
+    "Lone Ranger",
+    "Tank Girl",
+    "Steel",
+    "Blueberry",
+    "American Splendor",
+    "Road to Perdition",
+    "History of Violence",
+    "Stardust"
   ];
 
-  const filtered = superheroResults.filter((movie) => {
-    const title = `${movie.title || ""} ${movie.original_title || ""}`
-      .toLowerCase();
+  const searchedResults = await searchMany(
+    "movie",
+    comicQueries,
+    2
+  );
 
-    return comicTerms.some((term) => title.includes(term));
-  });
+  const superheroResults =
+    await superheroDiscover("movie");
 
-  return filtered;
+  return dedupe([
+    ...searchedResults,
+    ...superheroResults
+  ]);
 }
 
 function poster(path) {
@@ -340,22 +457,34 @@ function backdrop(path) {
 function toStremioItem(item, mediaType) {
   return {
     id: `${mediaType}:${item.id}`,
-    type: mediaType === "tv" ? "series" : "movie",
+
+    type:
+      mediaType === "tv"
+        ? "series"
+        : "movie",
+
     name:
       mediaType === "tv"
         ? item.name || item.original_name
         : item.title || item.original_title,
+
     poster: poster(item.poster_path),
-    background: backdrop(item.backdrop_path),
-    description: item.overview || "",
+
+    background:
+      backdrop(item.backdrop_path),
+
+    description:
+      item.overview || "",
+
     releaseInfo:
       mediaType === "tv"
         ? item.first_air_date || ""
         : item.release_date || "",
+
     imdbRating:
       typeof item.vote_average === "number"
         ? Number(item.vote_average.toFixed(1))
-        : undefined,
+        : undefined
   };
 }
 
@@ -367,120 +496,177 @@ app.get("/", (req, res) => {
   res.send("Superhero Central is running.");
 });
 
-app.get("/catalog/:type/:id.json", async (req, res) => {
-  try {
-    const { type, id } = req.params;
-    const search = req.query.search;
+app.get(
+  "/catalog/:type/:id.json",
+  async (req, res) => {
+    try {
+      const { type, id } = req.params;
+      const search = req.query.search;
 
-    let mediaType;
+      let mediaType;
 
-    if (type === "movie") {
-      mediaType = "movie";
-    } else if (type === "series") {
-      mediaType = "tv";
-    } else {
-      return res.status(400).json({ metas: [] });
-    }
-
-    let results = [];
-
-    if (search) {
-      results = await searchPages(mediaType, search, MAX_PAGES);
-    } else {
-      switch (id) {
-        case "superhero_movies":
-        case "superhero_series":
-          results = await superheroDiscover(mediaType);
-          break;
-
-        case "marvel_movies":
-        case "marvel_series":
-          results = await marvelDiscover(mediaType);
-          break;
-
-        case "dc_movies":
-        case "dc_series":
-          results = await dcDiscover(mediaType);
-          break;
-
-        case "animated_movies":
-        case "animated_series":
-          results = await animatedDiscover(mediaType);
-          break;
-
-        case "classic_movies":
-          results = await classicDiscover();
-          mediaType = "movie";
-          break;
-
-        case "other_comic_movies":
-          results = await otherComicDiscover();
-          mediaType = "movie";
-          break;
-
-        default:
-          return res.status(404).json({ metas: [] });
+      if (type === "movie") {
+        mediaType = "movie";
+      } else if (type === "series") {
+        mediaType = "tv";
+      } else {
+        return res.status(400).json({
+          metas: []
+        });
       }
+
+      let results = [];
+
+      if (search) {
+        results = await searchPages(
+          mediaType,
+          search,
+          MAX_PAGES
+        );
+      } else {
+        switch (id) {
+          case "superhero_movies":
+          case "superhero_series":
+            results =
+              await superheroDiscover(mediaType);
+            break;
+
+          case "marvel_movies":
+          case "marvel_series":
+            results =
+              await marvelDiscover(mediaType);
+            break;
+
+          case "dc_movies":
+          case "dc_series":
+            results =
+              await dcDiscover(mediaType);
+            break;
+
+          case "animated_movies":
+          case "animated_series":
+            results =
+              await animatedDiscover(mediaType);
+            break;
+
+          case "classic_movies":
+            results =
+              await classicDiscover();
+
+            mediaType = "movie";
+            break;
+
+          case "other_comic_movies":
+            results =
+              await otherComicDiscover();
+
+            mediaType = "movie";
+            break;
+
+          default:
+            return res.status(404).json({
+              metas: []
+            });
+        }
+      }
+
+      results = dedupe(results)
+        .slice(0, MAX_RESULTS);
+
+      const metas = results.map((item) =>
+        toStremioItem(item, mediaType)
+      );
+
+      res.json({ metas });
+
+    } catch (error) {
+      console.error(
+        "Catalog error:",
+        error
+      );
+
+      res.status(500).json({
+        metas: [],
+        error: "Unable to load catalog"
+      });
     }
-
-    results = dedupe(results).slice(0, MAX_RESULTS);
-
-    const metas = results.map((item) =>
-      toStremioItem(item, mediaType)
-    );
-
-    res.json({ metas });
-  } catch (error) {
-    console.error("Catalog error:", error);
-
-    res.status(500).json({
-      metas: [],
-      error: "Unable to load catalog",
-    });
   }
-});
+);
 
-app.get("/meta/:type/:id.json", async (req, res) => {
-  try {
-    const { type, id } = req.params;
+app.get(
+  "/meta/:type/:id.json",
+  async (req, res) => {
+    try {
+      const { type, id } = req.params;
 
-    const mediaType = type === "series" ? "tv" : "movie";
+      const mediaType =
+        type === "series"
+          ? "tv"
+          : "movie";
 
-    const data = await tmdb(`/${mediaType}/${id}`, {
-      append_to_response: "credits,videos",
-    });
+      const data = await tmdb(
+        `/${mediaType}/${id}`,
+        {
+          append_to_response:
+            "credits,videos"
+        }
+      );
 
-    const meta = {
-      id: `${mediaType}:${data.id}`,
-      type,
-      name:
-        mediaType === "tv"
-          ? data.name || data.original_name
-          : data.title || data.original_title,
-      poster: poster(data.poster_path),
-      background: backdrop(data.backdrop_path),
-      description: data.overview || "",
-      releaseInfo:
-        mediaType === "tv"
-          ? data.first_air_date || ""
-          : data.release_date || "",
-      imdbRating:
-        typeof data.vote_average === "number"
-          ? Number(data.vote_average.toFixed(1))
-          : undefined,
-    };
+      const meta = {
+        id:
+          `${mediaType}:${data.id}`,
 
-    res.json({ meta });
-  } catch (error) {
-    console.error("Meta error:", error);
+        type,
 
-    res.status(500).json({
-      meta: {},
-      error: "Unable to load metadata",
-    });
+        name:
+          mediaType === "tv"
+            ? data.name ||
+              data.original_name
+            : data.title ||
+              data.original_title,
+
+        poster:
+          poster(data.poster_path),
+
+        background:
+          backdrop(data.backdrop_path),
+
+        description:
+          data.overview || "",
+
+        releaseInfo:
+          mediaType === "tv"
+            ? data.first_air_date || ""
+            : data.release_date || "",
+
+        imdbRating:
+          typeof data.vote_average ===
+          "number"
+            ? Number(
+                data.vote_average.toFixed(1)
+              )
+            : undefined
+      };
+
+      res.json({ meta });
+
+    } catch (error) {
+      console.error(
+        "Meta error:",
+        error
+      );
+
+      res.status(500).json({
+        meta: {},
+        error:
+          "Unable to load metadata"
+      });
+    }
   }
-});
+);
 
 app.listen(PORT, () => {
-  console.log(`Superhero Central listening on ${PORT}`);
+  console.log(
+    `Superhero Central listening on ${PORT}`
+  );
 });
