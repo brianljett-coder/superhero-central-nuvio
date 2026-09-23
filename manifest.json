@@ -1,0 +1,104 @@
+{
+  "id": "com.superherocentral.nuvio",
+  "version": "1.0.0",
+  "name": "Superhero Central",
+  "description": "A superhero-only catalog addon for Nuvio: Marvel, DC, comic-book heroes, animated heroes, classics, series and more.",
+  "logo": "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/svg/1f9b8.svg",
+  "resources": [
+    "catalog",
+    "meta"
+  ],
+  "types": [
+    "movie",
+    "series"
+  ],
+  "catalogs": [
+    {
+      "type": "movie",
+      "id": "superhero_movies",
+      "name": "\ud83e\uddb8 Superhero Movies",
+      "extra": [
+        {
+          "name": "search",
+          "isRequired": false
+        }
+      ]
+    },
+    {
+      "type": "series",
+      "id": "superhero_series",
+      "name": "\ud83d\udcfa Superhero Series",
+      "extra": [
+        {
+          "name": "search",
+          "isRequired": false
+        }
+      ]
+    },
+    {
+      "type": "movie",
+      "id": "marvel_movies",
+      "name": "\ud83d\udee1\ufe0f Marvel Movies"
+    },
+    {
+      "type": "series",
+      "id": "marvel_series",
+      "name": "\ud83d\udee1\ufe0f Marvel Series"
+    },
+    {
+      "type": "movie",
+      "id": "dc_movies",
+      "name": "\ud83e\udd87 DC Movies"
+    },
+    {
+      "type": "series",
+      "id": "dc_series",
+      "name": "\ud83e\udd87 DC Series"
+    },
+    {
+      "type": "movie",
+      "id": "animated_movies",
+      "name": "\ud83c\udfa8 Animated Superheroes"
+    },
+    {
+      "type": "series",
+      "id": "animated_series",
+      "name": "\ud83c\udfa8 Animated Superhero Series"
+    },
+    {
+      "type": "movie",
+      "id": "classic_movies",
+      "name": "\ud83d\udd70\ufe0f Classic Superheroes"
+    },
+    {
+      "type": "movie",
+      "id": "other_comic_movies",
+      "name": "\u26a1 Other Comic-Book Heroes"
+    }
+  ],
+  "behaviorHints": {
+    "adult": false,
+    "p2p": false,
+    "configurable": true
+  },
+  "config": [
+    {
+      "key": "tmdb_api_key",
+      "type": "password",
+      "title": "TMDB API key",
+      "required": true
+    },
+    {
+      "key": "language",
+      "type": "text",
+      "title": "TMDB language (optional)",
+      "default": "en-US"
+    },
+    {
+      "key": "region",
+      "type": "text",
+      "title": "Region (optional)",
+      "default": "US"
+    }
+  ]
+}
