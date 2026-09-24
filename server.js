@@ -458,9 +458,6 @@ async function classicDiscover() {
     ) {
       all.push(movie);
     }
- * OTHER COMIC HEROES
- *
- * Independent and non-Big-Two comic properties.
  async function otherComicDiscover() {
   const properties = [
     "Hellboy",
