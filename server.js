@@ -458,6 +458,8 @@ async function classicDiscover() {
     ) {
       all.push(movie);
     }
+    }
+    }
  async function otherComicDiscover() {
   const properties = [
     "Hellboy",
