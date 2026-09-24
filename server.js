@@ -181,7 +181,7 @@ async function discoverPages(
     ) 
       break;
     }
-  }
+
 
   return all;
 }
