@@ -814,14 +814,25 @@ app.get(
         id
       } = req.params;
 
-      const mediaType =
-        type === "series"
-          ? "tv"
-          : "movie";
+      const {
+  type,
+  id
+} = req.params;
 
-      const data =
-        await tmdb(
-          `/${mediaType}/${id}`,
+const mediaType =
+  type === "series"
+    ? "tv"
+    : "movie";
+
+const tmdbId =
+  id.replace(
+    /^(movie|tv):/,
+    ""
+  );
+
+const data =
+  await tmdb(
+    `/${mediaType}/${tmdbId}`,
           {
             append_to_response:
               "credits,videos"
