@@ -467,9 +467,8 @@ async function classicDiscover() {
  * OTHER COMIC HEROES
  *
  * Independent and non-Big-Two comic properties.
- */
-async function otherComicDiscover() {
-  const queries = [
+ async function otherComicDiscover() {
+  const properties = [
     "Hellboy",
     "Spawn",
     "The Crow",
@@ -478,6 +477,7 @@ async function otherComicDiscover() {
     "The Rocketeer",
     "Dick Tracy",
     "Judge Dredd",
+    "Dredd",
     "Sin City",
     "Watchmen",
     "V for Vendetta",
@@ -498,7 +498,8 @@ async function otherComicDiscover() {
     "The Old Guard",
     "30 Days of Night",
     "I Am Number Four",
-    "Chronicle"
+    "Chronicle",
+    "RED"
   ];
 
   const blockedAdultTerms = [
@@ -513,49 +514,52 @@ async function otherComicDiscover() {
     "adult movie"
   ];
 
-  const titleRules = {
-    "Hellboy": (t) => t.includes("hellboy"),
-    "Spawn": (t) => t === "spawn" || t.startsWith("spawn:"),
-    "The Crow": (t) => t.includes("the crow"),
-    "The Shadow": (t) => t === "the shadow" || t.startsWith("the shadow:"),
-    "The Phantom": (t) => t.includes("the phantom"),
-    "The Rocketeer": (t) => t.includes("rocketeer"),
-    "Dick Tracy": (t) => t.includes("dick tracy"),
-    "Judge Dredd": (t) => t.includes("judge dredd") || t === "dredd",
-    "Sin City": (t) => t.includes("sin city"),
-    "Watchmen": (t) => t.includes("watchmen"),
-    "V for Vendetta": (t) => t.includes("v for vendetta"),
-    "Kick-Ass": (t) => t.includes("kick-ass") || t.includes("kick ass"),
-    "Scott Pilgrim": (t) => t.includes("scott pilgrim"),
-    "Kingsman": (t) => t.includes("kingsman"),
-    "Wanted": (t) => t === "wanted" || t.startsWith("wanted:"),
-    "The Mask": (t) => t === "the mask" || t.startsWith("the mask"),
-    "Men in Black": (t) => t.includes("men in black"),
-    "Constantine": (t) => t.includes("constantine"),
-    "Bloodshot": (t) => t.includes("bloodshot"),
-    "Darkman": (t) => t.includes("darkman"),
-    "Mystery Men": (t) => t.includes("mystery men"),
-    "The Spirit": (t) => t === "the spirit" || t.startsWith("the spirit:"),
-    "League of Extraordinary Gentlemen": (t) =>
-      t.includes("league of extraordinary gentlemen"),
-    "Tank Girl": (t) => t.includes("tank girl"),
-    "Stardust": (t) => t === "stardust",
-    "The Old Guard": (t) => t.includes("the old guard"),
-    "30 Days of Night": (t) => t.includes("30 days of night"),
-    "I Am Number Four": (t) => t.includes("i am number four"),
-    "Chronicle": (t) => t === "chronicle"
+  const titleMatches = {
+    "Hellboy": ["hellboy"],
+    "Spawn": ["spawn"],
+    "The Crow": ["the crow"],
+    "The Shadow": ["the shadow"],
+    "The Phantom": ["the phantom"],
+    "The Rocketeer": ["rocketeer"],
+    "Dick Tracy": ["dick tracy"],
+    "Judge Dredd": ["judge dredd", "dredd"],
+    "Dredd": ["dredd"],
+    "Sin City": ["sin city"],
+    "Watchmen": ["watchmen"],
+    "V for Vendetta": ["v for vendetta"],
+    "Kick-Ass": ["kick-ass", "kick ass"],
+    "Scott Pilgrim": ["scott pilgrim"],
+    "Kingsman": ["kingsman"],
+    "Wanted": ["wanted"],
+    "The Mask": ["the mask"],
+    "Men in Black": ["men in black"],
+    "Constantine": ["constantine"],
+    "Bloodshot": ["bloodshot"],
+    "Darkman": ["darkman"],
+    "Mystery Men": ["mystery men"],
+    "The Spirit": ["the spirit"],
+    "League of Extraordinary Gentlemen": [
+      "league of extraordinary gentlemen"
+    ],
+    "Tank Girl": ["tank girl"],
+    "Stardust": ["stardust"],
+    "The Old Guard": ["the old guard"],
+    "30 Days of Night": ["30 days of night"],
+    "I Am Number Four": ["i am number four"],
+    "Chronicle": ["chronicle"],
+    "RED": ["red"]
   };
 
   const results = [];
 
-  for (const query of queries) {
+  for (const property of properties) {
     const searched = await searchPages(
       "movie",
-      query,
-      2
+      property,
+      3
     );
 
-    const matcher = titleRules[query];
+    const matches = titleMatches[property] || [];
 
     for (const movie of searched) {
       if (movie.adult === true) {
@@ -584,7 +588,14 @@ async function otherComicDiscover() {
         continue;
       }
 
-      if (!matcher || !matcher(title)) {
+      if (
+        !matches.some(
+          (match) =>
+            title === match ||
+            title.startsWith(match + ":") ||
+            title.includes(match)
+        )
+      ) {
         continue;
       }
 
@@ -593,7 +604,7 @@ async function otherComicDiscover() {
   }
 
   return dedupe(results);
-                }
+}
 
 function poster(path) {
   return path
