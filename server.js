@@ -456,13 +456,14 @@ async function classicDiscover() {
       year > 0 &&
       year < 2000
     ) {
-      all.push(movie);
+            all.push(movie);
     }
   }
-return dedupe(all);
+
+  return dedupe(all);
 }
-          
- async function otherComicDiscover() {
+
+async function otherComicDiscover() {
   const properties = [
     "Hellboy",
     "Spawn",
