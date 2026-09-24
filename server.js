@@ -452,7 +452,7 @@ async function classicDiscover() {
       )
     )
                 if (year > 0 && year < 2000) {
-      all.push(movie);
+            all.push(movie);
     }
   }
 
