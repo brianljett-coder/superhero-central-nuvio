@@ -460,10 +460,9 @@ async function classicDiscover() {
     }
   }
 
-  return dedupe(all);
-}
+  
 
-/*
+
  * OTHER COMIC HEROES
  *
  * Independent and non-Big-Two comic properties.
