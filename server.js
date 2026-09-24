@@ -459,139 +459,143 @@ async function classicDiscover() {
   return dedupe(all);
 }
 
-async function otherComicDiscover() {
-  const properties = [
-    "Hellboy",
-    "Spawn",
-    "The Crow",
-    "The Shadow",
-    "The Phantom",
-    "The Rocketeer",
-    "Dick Tracy",
-    "Judge Dredd",
-    "Dredd",
-    "Sin City",
-    "Watchmen",
-    "V for Vendetta",
-    "Kick-Ass",
-    "Scott Pilgrim",
-    "Kingsman",
-    "Wanted",
-    "The Mask",
-    "Men in Black",
-    "Constantine",
-    "Bloodshot",
-    "Darkman",
-    "Mystery Men",
-    "The Spirit",
-    "League of Extraordinary Gentlemen",
-    "Tank Girl",
-    "Stardust",
-    "The Old Guard",
-    "30 Days of Night",
-    "I Am Number Four",
-    "Chronicle",
-    "RED"
-  ];
+async async function otherComicDiscover() {
+  /*
+   * OTHER COMIC HEROES
+   *
+   * Curated TMDB movie IDs only.
+   * No broad title searches, which prevents:
+   * - duplicate search results
+   * - ambiguous titles
+   * - unrelated/adult search results
+   */
 
-  const blockedAdultTerms = [
-    "porn",
-    "xxx",
-    "hentai",
-    "fetish",
-    "erotic",
-    "explicit",
-    "nsfw",
-    "adult film",
-    "adult movie"
-  ];
+  const movieIds = [
+    // Spawn
+    10336,
 
-  const titleMatches = {
-    "Hellboy": ["hellboy"],
-    "Spawn": ["spawn"],
-    "The Crow": ["the crow"],
-    "The Shadow": ["the shadow"],
-    "The Phantom": ["the phantom"],
-    "The Rocketeer": ["rocketeer"],
-    "Dick Tracy": ["dick tracy"],
-    "Judge Dredd": ["judge dredd", "dredd"],
-    "Dredd": ["dredd"],
-    "Sin City": ["sin city"],
-    "Watchmen": ["watchmen"],
-    "V for Vendetta": ["v for vendetta"],
-    "Kick-Ass": ["kick-ass", "kick ass"],
-    "Scott Pilgrim": ["scott pilgrim"],
-    "Kingsman": ["kingsman"],
-    "Wanted": ["wanted"],
-    "The Mask": ["the mask"],
-    "Men in Black": ["men in black"],
-    "Constantine": ["constantine"],
-    "Bloodshot": ["bloodshot"],
-    "Darkman": ["darkman"],
-    "Mystery Men": ["mystery men"],
-    "The Spirit": ["the spirit"],
-    "League of Extraordinary Gentlemen": [
-      "league of extraordinary gentlemen"
-    ],
-    "Tank Girl": ["tank girl"],
-    "Stardust": ["stardust"],
-    "The Old Guard": ["the old guard"],
-    "30 Days of Night": ["30 days of night"],
-    "I Am Number Four": ["i am number four"],
-    "Chronicle": ["chronicle"],
-    "RED": ["red"]
-  };
+    // Hellboy
+    1487,
+    11253,
+    456740,
+    726898,
+
+    // The Crow
+    9495,
+    957452,
+
+    // The Phantom
+    9514,
+
+    // The Rocketeer
+    2453,
+
+    // Dick Tracy
+    8592,
+
+    // Judge Dredd / Dredd
+    403,
+    49049,
+
+    // Sin City
+    187,
+    189,
+
+    // Watchmen
+    13183,
+
+    // V for Vendetta
+    752,
+
+    // Kick-Ass
+    10140,
+    59859,
+
+    // Scott Pilgrim
+    22538,
+
+    // Kingsman
+    207703,
+    343668,
+    476669,
+
+    // Wanted
+    553,
+
+    // The Mask
+    854,
+
+    // Men in Black
+    607,
+    608,
+    41154,
+    479455,
+
+    // Constantine
+    561,
+
+    // Bloodshot
+    338762,
+
+    // Darkman
+    10655,
+    19017,
+    19018,
+
+    // Mystery Men
+    9741,
+
+    // The Spirit
+    8285,
+
+    // League of Extraordinary Gentlemen
+    8698,
+
+    // Tank Girl
+    9067,
+
+    // Stardust
+    4523,
+
+    // The Old Guard
+    547016,
+
+    // 30 Days of Night
+    4513,
+    44535,
+
+    // I Am Number Four
+    46528,
+
+    // Chronicle
+    76726
+  ];
 
   const results = [];
 
-  for (const property of properties) {
-    const searched = await searchPages(
-      "movie",
-      property,
-      3
-    );
+  for (const movieId of movieIds) {
+    try {
+      const movie = await tmdb(
+        `/movie/${movieId}`
+      );
 
-    const matches = titleMatches[property] || [];
+      if (!movie) {
+        continue;
+      }
 
-    for (const movie of searched) {
+      // Extra safety: never allow TMDB to return an adult item.
       if (movie.adult === true) {
         continue;
       }
 
-      const title = (
-        movie.title ||
-        ""
-      ).trim().toLowerCase();
-
-      const overview = (
-        movie.overview ||
-        ""
-      ).toLowerCase();
-
-      const combinedText =
-        `${title} ${overview}`;
-
-      if (
-        blockedAdultTerms.some(
-          (term) =>
-            combinedText.includes(term)
-        )
-      ) {
-        continue;
-      }
-
-      if (
-        !matches.some(
-          (match) =>
-            title === match ||
-            title.startsWith(match + ":") ||
-            title.includes(match)
-        )
-      ) {
-        continue;
-      }
-
       results.push(movie);
+    } catch (error) {
+      // Ignore a bad/removed TMDB ID rather than
+      // breaking the entire catalog.
+      console.error(
+        `Other Comic movie ${movieId} failed:`,
+        error.message
+      );
     }
   }
 
