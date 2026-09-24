@@ -178,7 +178,7 @@ async function discoverPages(
     if (
       page >=
       (data.total_pages || 1)
-    ) {
+    ) 
       break;
     }
   }
