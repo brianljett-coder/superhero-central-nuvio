@@ -459,7 +459,7 @@ async function classicDiscover() {
   return dedupe(all);
 }
 
-async async function otherComicDiscover() {
+async function otherComicDiscover() {
   /*
    * OTHER COMIC HEROES
    *
