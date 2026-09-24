@@ -485,56 +485,115 @@ async function otherComicDiscover() {
     "Scott Pilgrim",
     "Kingsman",
     "Wanted",
-    "Red",
     "The Mask",
     "Men in Black",
     "Constantine",
-    "Dredd",
     "Bloodshot",
     "Darkman",
     "Mystery Men",
     "The Spirit",
     "League of Extraordinary Gentlemen",
     "Tank Girl",
-    "Steel",
     "Stardust",
     "The Old Guard",
-    "The Boys",
-    "Umbrella Academy",
-    "Invincible",
-    "Preacher",
-    "Sin City",
     "30 Days of Night",
     "I Am Number Four",
-    "Push",
     "Chronicle"
   ];
 
-  const searched =
-    await searchMany(
+  const blockedAdultTerms = [
+    "porn",
+    "xxx",
+    "hentai",
+    "fetish",
+    "erotic",
+    "explicit",
+    "nsfw",
+    "adult film",
+    "adult movie"
+  ];
+
+  const titleRules = {
+    "Hellboy": (t) => t.includes("hellboy"),
+    "Spawn": (t) => t === "spawn" || t.startsWith("spawn:"),
+    "The Crow": (t) => t.includes("the crow"),
+    "The Shadow": (t) => t === "the shadow" || t.startsWith("the shadow:"),
+    "The Phantom": (t) => t.includes("the phantom"),
+    "The Rocketeer": (t) => t.includes("rocketeer"),
+    "Dick Tracy": (t) => t.includes("dick tracy"),
+    "Judge Dredd": (t) => t.includes("judge dredd") || t === "dredd",
+    "Sin City": (t) => t.includes("sin city"),
+    "Watchmen": (t) => t.includes("watchmen"),
+    "V for Vendetta": (t) => t.includes("v for vendetta"),
+    "Kick-Ass": (t) => t.includes("kick-ass") || t.includes("kick ass"),
+    "Scott Pilgrim": (t) => t.includes("scott pilgrim"),
+    "Kingsman": (t) => t.includes("kingsman"),
+    "Wanted": (t) => t === "wanted" || t.startsWith("wanted:"),
+    "The Mask": (t) => t === "the mask" || t.startsWith("the mask"),
+    "Men in Black": (t) => t.includes("men in black"),
+    "Constantine": (t) => t.includes("constantine"),
+    "Bloodshot": (t) => t.includes("bloodshot"),
+    "Darkman": (t) => t.includes("darkman"),
+    "Mystery Men": (t) => t.includes("mystery men"),
+    "The Spirit": (t) => t === "the spirit" || t.startsWith("the spirit:"),
+    "League of Extraordinary Gentlemen": (t) =>
+      t.includes("league of extraordinary gentlemen"),
+    "Tank Girl": (t) => t.includes("tank girl"),
+    "Stardust": (t) => t === "stardust",
+    "The Old Guard": (t) => t.includes("the old guard"),
+    "30 Days of Night": (t) => t.includes("30 days of night"),
+    "I Am Number Four": (t) => t.includes("i am number four"),
+    "Chronicle": (t) => t === "chronicle"
+  };
+
+  const results = [];
+
+  for (const query of queries) {
+    const searched = await searchPages(
       "movie",
-      queries,
+      query,
       2
     );
 
-  /*
-   * Remove obvious Marvel/DC results from this category
-   * based on production companies when that information
-   * is available through TMDB's movie details.
-   *
-   * The search results themselves remain intact here,
-   * giving us a broad comic-book catalog.
-   */
-  const superheroResults =
-    await superheroDiscover(
-      "movie"
-    );
+    const matcher = titleRules[query];
 
-  return dedupe([
-    ...searched,
-    ...superheroResults
-  ]);
-}
+    for (const movie of searched) {
+      if (movie.adult === true) {
+        continue;
+      }
+
+      const title = (
+        movie.title ||
+        ""
+      ).trim().toLowerCase();
+
+      const overview = (
+        movie.overview ||
+        ""
+      ).toLowerCase();
+
+      const combinedText =
+        `${title} ${overview}`;
+
+      if (
+        blockedAdultTerms.some(
+          (term) =>
+            combinedText.includes(term)
+        )
+      ) {
+        continue;
+      }
+
+      if (!matcher || !matcher(title)) {
+        continue;
+      }
+
+      results.push(movie);
+    }
+  }
+
+  return dedupe(results);
+                }
 
 function poster(path) {
   return path
