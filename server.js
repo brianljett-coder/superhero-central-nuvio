@@ -814,10 +814,7 @@ app.get(
         id
       } = req.params;
 
-      const {
-  type,
-  id
-} = req.params;
+      
 
 const mediaType =
   type === "series"
