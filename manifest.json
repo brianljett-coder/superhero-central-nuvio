@@ -39,42 +39,86 @@
       "type": "movie",
       "id": "marvel_movies",
       "name": "\ud83d\udee1\ufe0f Marvel Movies"
+      "extra": [
+  {
+    "name": "search",
+    "isRequired": false
+  }
+      ]
     },
     {
       "type": "series",
       "id": "marvel_series",
       "name": "\ud83d\udee1\ufe0f Marvel Series"
+      "extra": [
+  {
+    "name": "search",
+    "isRequired": false
+  }
+]
     },
     {
       "type": "movie",
       "id": "dc_movies",
       "name": "\ud83e\udd87 DC Movies"
     },
+    "extra": [
+  {
+    "name": "search",
+    "isRequired": false
+  }
+]
     {
       "type": "series",
       "id": "dc_series",
       "name": "\ud83e\udd87 DC Series"
-    },
+    },"extra": [
+  {
+    "name": "search",
+    "isRequired": false
+  }
+]
     {
       "type": "movie",
       "id": "animated_movies",
       "name": "\ud83c\udfa8 Animated Superheroes"
-    },
+    },"extra": [
+  {
+    "name": "search",
+    "isRequired": false
+  }
+]
     {
       "type": "series",
       "id": "animated_series",
       "name": "\ud83c\udfa8 Animated Superhero Series"
-    },
+    },"extra": [
+  {
+    "name": "search",
+    "isRequired": false
+  }
+]
     {
       "type": "movie",
       "id": "classic_movies",
       "name": "\ud83d\udd70\ufe0f Classic Superheroes"
-    },
+    },"extra": [
+  {
+    "name": "search",
+    "isRequired": false
+  }
+]
     {
       "type": "movie",
       "id": "other_comic_movies",
       "name": "\u26a1 Other Comic-Book Heroes"
     }
+    "extra": [
+  {
+    "name": "search",
+    "isRequired": false
+  }
+]
   ],
   "behaviorHints": {
     "adult": false,
