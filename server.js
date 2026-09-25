@@ -7,7 +7,7 @@ app.use(cors());
 const PORT = process.env.PORT || 3000;
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
-const MAX_PAGES = 5;
+const MAX_PAGES = 10;
 const MAX_RESULTS = 100;
 
 const MANIFEST = {
