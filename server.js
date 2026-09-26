@@ -613,7 +613,160 @@ function backdrop(path) {
     ? `https://image.tmdb.org/t/p/w1280${path}`
     : undefined;
 }
+async function categorySearch(
+  catalogId,
+  mediaType,
+  query
+) {
+  const candidates = await searchPages(
+    mediaType,
+    query,
+    3
+  );
 
+  if (!candidates.length) {
+    return [];
+  }
+
+  // Other Comic Heroes uses the curated list.
+  if (catalogId === "other_comic_movies") {
+    const curated =
+      await otherComicDiscover();
+
+    const q =
+      query.trim().toLowerCase();
+
+    return curated.filter((item) => {
+      const title =
+        item.title ||
+        item.original_title ||
+        "";
+
+      return title
+        .toLowerCase()
+        .includes(q);
+    });
+  }
+
+  const checked = [];
+
+  // Limit validation so one search does not
+  // create an excessive number of TMDB requests.
+  const limited =
+    candidates.slice(0, 25);
+
+  for (const item of limited) {
+    try {
+      const details =
+        await tmdb(
+          `/${mediaType}/${item.id}`,
+          {
+            append_to_response:
+              "keywords"
+          }
+        );
+
+      if (!details || details.adult === true) {
+        continue;
+      }
+
+      const keywords =
+        details.keywords || {};
+
+      const keywordList =
+        keywords.keywords ||
+        keywords.results ||
+        [];
+
+      const keywordIds =
+        keywordList.map(
+          (keyword) =>
+            String(keyword.id)
+        );
+
+      const companies =
+        Array.isArray(
+          details.production_companies
+        )
+          ? details.production_companies
+          : [];
+
+      const companyIds =
+        companies.map(
+          (company) =>
+            String(company.id)
+        );
+
+      const isSuperhero =
+        keywordIds.includes("9715");
+
+      const isMarvel =
+        companyIds.includes("420");
+
+      const isDC =
+        companyIds.includes("9993");
+
+      let matches = false;
+
+      switch (catalogId) {
+        case "superhero_movies":
+        case "superhero_series":
+          matches = isSuperhero;
+          break;
+
+        case "marvel_movies":
+        case "marvel_series":
+          matches = isMarvel;
+          break;
+
+        case "dc_movies":
+        case "dc_series":
+          matches = isDC;
+          break;
+
+        case "animated_movies":
+        case "animated_series":
+          matches =
+            isSuperhero &&
+            Array.isArray(
+              details.genres
+            ) &&
+            details.genres.some(
+              (genre) =>
+                genre.id === 16
+            );
+          break;
+
+        case "classic_movies":
+          matches =
+            isSuperhero &&
+            typeof details.release_date ===
+              "string" &&
+            Number(
+              details.release_date.slice(
+                0,
+                4
+              )
+            ) < 2000;
+          break;
+
+        default:
+          matches = false;
+      }
+
+      if (matches) {
+        checked.push(item);
+      }
+    } catch (error) {
+      console.error(
+        `Search validation failed for ${mediaType}:${item.id}:`,
+        error.message
+      );
+    }
+  }
+
+  return dedupe(checked);
+}
 function toStremioItem(
   item,
   mediaType
@@ -711,11 +864,13 @@ app.get(
       let results = [];
 
       if (search) {
-        results =
-          await searchPages(
-            mediaType,
-            search,
-            MAX_PAGES
+  results =
+    await categorySearch(
+      id,
+      mediaType,
+      search
+    );
+} else {
           );
       } else {
         switch (id) {
