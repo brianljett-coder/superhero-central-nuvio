@@ -872,9 +872,7 @@ app.get(
       search
     );
 } else {
-          );
-      } else {
-        switch (id) {
+  switch (id) {
           case "superhero_movies":
           case "superhero_series":
             results =
