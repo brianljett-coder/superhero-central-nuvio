@@ -863,7 +863,8 @@ app.get(
 
       let results = [];
 
-      if (search) {
+
+              if (search) {
   results =
     await categorySearch(
       id,
